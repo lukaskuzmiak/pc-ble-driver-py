@@ -94,6 +94,8 @@ NRF_ERRORS = {
     for name in dir(driver) if name.startswith('NRF_ERROR_')
 }
 
+VENDOR_UUIDS = dict()
+
 
 def NordicSemiErrorCheck(wrapped=None, expected=driver.NRF_SUCCESS):
     if wrapped is None:
@@ -1227,6 +1229,9 @@ class BLEUUIDBase(object):
             self.type = driver.BLE_UUID_TYPE_BLE
 
         else:
+            if vs_uuid_base is None and uuid_type >= driver.BLE_UUID_TYPE_VENDOR_BEGIN and (
+                    uuid_base := VENDOR_UUIDS.get(uuid_type)):
+                vs_uuid_base = uuid_base
             self.base = vs_uuid_base
             self.type = uuid_type
 
@@ -2054,6 +2059,8 @@ class BLEDriver(object):
         self.ble_event_worker.daemon = True
         self.ble_event_worker.start()
 
+        VENDOR_UUIDS = dict()
+
         return driver.sd_rpc_open(
             self.rpc_adapter,
             self.status_handler,
@@ -2412,6 +2419,9 @@ class BLEDriver(object):
         )
         if err_code == driver.NRF_SUCCESS:
             uuid_base.type = driver.uint8_value(uuid_type)
+            vendor_uuid_base = uuid_base.base
+            vendor_uuid_base[2:4] = [0, 0] # zero out bytes 12 and 13 as this is a base and should not contain those
+            VENDOR_UUIDS[uuid_base.type] = vendor_uuid_base
         return err_code
 
     @NordicSemiErrorCheck

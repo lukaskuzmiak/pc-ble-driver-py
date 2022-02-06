@@ -310,7 +310,7 @@ class BLEAdapter(BLEDriverObserver):
 
             # Create UUIDBase object and register it in softdevice
             base = BLEUUIDBase(
-                response["data"][::-1], driver.BLE_UUID_TYPE_VENDOR_BEGIN
+                response["data"][::-1]
             )
             self.driver.ble_vs_uuid_add(base)
 
@@ -320,11 +320,6 @@ class BLEAdapter(BLEDriverObserver):
                 evt=BLEEvtID.gattc_evt_prim_srvc_disc_rsp
             )
             if response["status"] == BLEGattStatusCode.success:
-                # Assign UUIDBase manually
-                # See:
-                #  https://github.com/NordicSemiconductor/pc-ble-driver-py/issues/38
-                for s in response["services"]:
-                    s.uuid.base = base
                 self.db_conns[conn_handle].services.extend(response["services"])
 
         for s in self.db_conns[conn_handle].services:
