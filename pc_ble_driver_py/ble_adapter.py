@@ -314,7 +314,7 @@ class BLEAdapter(BLEDriverObserver):
             )
             self.driver.ble_vs_uuid_add(base)
 
-            # Rediscover this service.
+            # Rediscover this service (as vendor UUID is registered it will be populated properly now)
             self.driver.ble_gattc_prim_srvc_disc(conn_handle, uuid, s.start_handle)
             response = self.evt_sync[conn_handle].wait(
                 evt=BLEEvtID.gattc_evt_prim_srvc_disc_rsp
@@ -329,13 +329,17 @@ class BLEAdapter(BLEDriverObserver):
 
         for s in self.db_conns[conn_handle].services:
             self.driver.ble_gattc_char_disc(conn_handle, s.start_handle, s.end_handle)
+            vendor_characteristics = []
             while True:
                 response = self.evt_sync[conn_handle].wait(
                     evt=BLEEvtID.gattc_evt_char_disc_rsp
                 )
                 if response["status"] == BLEGattStatusCode.success:
                     for char in response["characteristics"]:
-                        s.char_add(char)
+                        if char.uuid.value == BLEUUID.Standard.unknown:
+                            vendor_characteristics.append(char)
+                        else:
+                            s.char_add(char)
                 elif response["status"] == BLEGattStatusCode.attribute_not_found:
                     break
                 else:
@@ -346,6 +350,32 @@ class BLEAdapter(BLEDriverObserver):
                     response["characteristics"][-1].handle_decl + 1,
                     s.end_handle,
                 )
+
+            for ch in vendor_characteristics:
+                # Read characteristic handle to obtain full 128-bit UUID.
+                self.driver.ble_gattc_read(conn_handle, ch.handle_decl, 0)
+                response = self.evt_sync[conn_handle].wait(evt=BLEEvtID.gattc_evt_read_rsp)
+                if response["status"] != BLEGattStatusCode.success:
+                    continue
+
+                # Check response length.
+                if len(response["data"]) != 19:
+                    continue
+
+                # Create UUIDBase object and register it in softdevice
+                base = BLEUUIDBase(
+                    response["data"][3:][::-1] # skip first 3 bytes to get to UUID
+                )
+                self.driver.ble_vs_uuid_add(base)
+
+                # Rediscover this characteristic (as vendor UUID is registered it will be populated properly now)
+                self.driver.ble_gattc_char_disc(conn_handle, ch.handle_decl, ch.handle_decl)
+                response = self.evt_sync[conn_handle].wait(
+                    evt=BLEEvtID.gattc_evt_char_disc_rsp
+                )
+                if response["status"] == BLEGattStatusCode.success:
+                    for char in response["characteristics"]:
+                        s.char_add(char)
 
             for ch in s.chars:
                 self.driver.ble_gattc_desc_disc(
