@@ -2419,7 +2419,9 @@ class BLEDriver(object):
         )
         if err_code == driver.NRF_SUCCESS:
             uuid_base.type = driver.uint8_value(uuid_type)
-            VENDOR_UUIDS[uuid_base.type] = uuid_base.base
+            vendor_uuid_base = uuid_base.base
+            vendor_uuid_base[2:4] = [0, 0] # zero out bytes 12 and 13 as this is a base and should not contain those
+            VENDOR_UUIDS[uuid_base.type] = vendor_uuid_base
         return err_code
 
     @NordicSemiErrorCheck
