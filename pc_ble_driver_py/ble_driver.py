@@ -52,6 +52,7 @@ from typing import List
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 
+import uuid
 import wrapt
 
 from pc_ble_driver_py.observers import *
@@ -1260,6 +1261,7 @@ class BLEUUID(object):
         heart_rate = 0x2A37
 
     def __init__(self, value, base=BLEUUIDBase()):
+        assert isinstance(value, int), "Invalid argument type"
         assert isinstance(base, BLEUUIDBase), "Invalid argument type"
         self.base = base
         try:
@@ -1286,6 +1288,10 @@ class BLEUUID(object):
     def __str__(self):
         if isinstance(self.value, BLEUUID.Standard):
             return "0x{:04X} ({})".format(self.value.value, self.value)
+        elif self.base.base:
+            full_uuid = self.base.base
+            full_uuid[2:4] = [self.value >> 8, self.value & 0xff]
+            return str(uuid.UUID(bytes=bytes(full_uuid)))
         else:
             return "0x{:04X}".format(self.value)
 
