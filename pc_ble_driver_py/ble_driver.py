@@ -1253,12 +1253,23 @@ class BLEUUIDBase(object):
 class BLEUUID(object):
     class Standard(Enum):
         unknown = 0x0000
+        generic_access = 0x1800
+        generic_attribute = 0x1801
+        battery_service = 0x180f
         service_primary = 0x2800
         service_secondary = 0x2801
         characteristic = 0x2803
         cccd = 0x2902
+        device_name = 0x2A00
+        appearance = 0x2A01
+        peripheral_privacy_flag = 0x2A02
+        reconnection_address = 0x2A03
+        peripheral_preferred_connection_parameters = 0x2A04
+        service_changed = 0x2A05
+        alert_level = 0x2A06
         battery_level = 0x2A19
         heart_rate = 0x2A37
+        central_address_resolution = 0x2AA6
 
     def __init__(self, value, base=BLEUUIDBase()):
         assert isinstance(value, int), "Invalid argument type"
