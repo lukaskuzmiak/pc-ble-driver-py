@@ -1281,12 +1281,13 @@ class BLEUUID(object):
         return {"value": self.value, "base": self.base}
 
     def __str__(self):
-        if isinstance(self.value, BLEUUID.Standard):
-            return "0x{:04X} ({})".format(self.value.value, self.value)
-        elif self.base.base:
+        if self.base.base:
+            uuid_value = self.value.value if isinstance(self.value, BLEUUID.Standard) else self.value
             full_uuid = self.base.base
-            full_uuid[2:4] = [self.value >> 8, self.value & 0xff]
+            full_uuid[2:4] = [uuid_value >> 8, uuid_value & 0xff]
             return str(uuid.UUID(bytes=bytes(full_uuid)))
+        elif isinstance(self.value, BLEUUID.Standard):
+            return "0x{:04X} ({})".format(self.value.value, self.value)
         else:
             return "0x{:04X}".format(self.value)
 
