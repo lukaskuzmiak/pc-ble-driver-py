@@ -1256,7 +1256,7 @@ class BLEUUID(object):
         heart_rate = 0x2A37
 
     def __init__(self, value, base=BLEUUIDBase()):
-        assert isinstance(value, int), "Invalid argument type"
+        assert isinstance(value, (int, BLEUUID.Standard)), "Invalid argument type"
         assert isinstance(base, BLEUUIDBase), "Invalid argument type"
         self.base = base
         try:
