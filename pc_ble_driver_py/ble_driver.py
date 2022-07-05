@@ -2577,6 +2577,36 @@ class BLEDriver(object):
         hvx_params = hvx_params.to_c()
         return driver.sd_ble_gatts_hvx(self.rpc_adapter, conn_handle, hvx_params)
 
+    @NordicSemiErrorCheck
+    @wrapt.synchronized(api_lock)
+    def ble_gap_device_name_set(self, name, device_name_read_only=True):
+        write_perm = BLEGapConnSecMode()
+        if device_name_read_only:
+            write_perm.set_no_access()
+        else:
+            write_perm.set_open()
+        p_write_perm = write_perm.to_c()
+
+        p_dev_name = util.list_to_uint8_array([ord(x) for x in name])
+        p_dev_name_cast = p_dev_name.cast()
+        name_length = len(name)
+
+        return driver.sd_ble_gap_device_name_set(
+            self.rpc_adapter, p_write_perm, p_dev_name_cast, name_length
+        )
+
+    @NordicSemiErrorCheck
+    @wrapt.synchronized
+    def ble_gap_appearance_set(self, value):
+        return driver.sd_ble_gap_appearance_set(self.rpc_adapter, value)
+
+    @NordicSemiErrorCheck
+    @wrapt.synchronized
+    def ble_gap_ppcp_set(self, conn_params):
+        assert isinstance(conn_params, BLEGapConnParams), "Invalid argument type"
+        params = conn_params.to_c()
+        return driver.sd_ble_gap_ppcp_set(self.rpc_adapter, params)
+
     def ble_gatts_sys_attr_set(self, conn_handle, sys_attr_data, length, flags):
         return driver.sd_ble_gatts_sys_attr_set(self.rpc_adapter, conn_handle,
                                                 sys_attr_data, length, flags)
