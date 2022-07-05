@@ -1780,14 +1780,22 @@ class BLEConfigGapDeviceName(BLEConfigBase):
         return ble_cfg
 
 
-class BLEConfigGatts(BLEConfigBase):
-    def __init__(self, service_changed=1, attr_tab_size=1):
+class BLEConfigGattsServiceChanged(BLEConfigBase):
+    def __init__(self, service_changed=1):
         self.service_changed = service_changed
-        self.attr_tab_size = attr_tab_size
 
     def to_c(self):
         ble_cfg = driver.ble_cfg_t()
         ble_cfg.gatts_cfg.service_changed.service_changed = self.service_changed
+        return ble_cfg
+
+
+class BLEConfigGattsAttrTabSize(BLEConfigBase):
+    def __init__(self, attr_tab_size=1):
+        self.attr_tab_size = attr_tab_size
+
+    def to_c(self):
+        ble_cfg = driver.ble_cfg_t()
         ble_cfg.gatts_cfg.attr_tab_size.attr_tab_size = self.attr_tab_size
         return ble_cfg
 
