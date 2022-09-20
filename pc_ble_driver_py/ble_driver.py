@@ -516,7 +516,7 @@ class BLEGapAddr(object):
         self.addr = addr
 
     def __getstate__(self):
-        self.addr_type = self.addr_type.value
+        self.addr_type = self.addr_type.value if type(self.addr_type) == BLEGapAddr.Types else self.addr_type
         return self.__dict__
 
     def __setstate__(self, state):
@@ -559,16 +559,16 @@ class BLEGapSecKeyset(object):
     def to_c(self):
         keyset = driver.ble_gap_sec_keyset_t()
         keyset.keys_own = BLEGapSecKeys(
-            self.keys_own.p_enc_key,
-            self.keys_own.p_id_key,
-            self.keys_own.p_sign_key,
-            self.keys_own.p_pk
+            self.keys_own.enc_key,
+            self.keys_own.id_key,
+            self.keys_own.sign_key,
+            self.keys_own.pk
         ).to_c()
         keyset.keys_peer = BLEGapSecKeys(
-            self.keys_peer.p_enc_key,
-            self.keys_peer.p_id_key,
-            self.keys_peer.p_sign_key,
-            self.keys_peer.p_pk
+            self.keys_peer.enc_key,
+            self.keys_peer.id_key,
+            self.keys_peer.sign_key,
+            self.keys_peer.pk
         ).to_c()
 
         return keyset
@@ -596,13 +596,13 @@ class BLEGapSecKeys(object):
     def to_c(self):
         sec_keys = driver.ble_gap_sec_keys_t()
         sec_keys.p_enc_key = BLEGapEncKey(self.enc_key.master_id, self.enc_key.enc_info).to_c()
-        sec_keys.p_id_key = BLEGapIdKey(self.id_key.id_info, self.id_key.id_info).to_c()
+        sec_keys.p_id_key = BLEGapIdKey(self.id_key.irk, self.id_key.id_addr_info).to_c()
         sec_keys.p_sign_key = BLEGapSignInfo(self.sign_key.csrk).to_c()
         sec_keys.p_pk = BLEGapLescP256Pk(self.pk.pk).to_c()
         return sec_keys
 
     def __str__(self):
-        return "enc_key({0.p_enc_key}) id_key({0.p_id_key}) csrk({0.p_csrk}) pk({0.p_pk})".format(
+        return "enc_key({0.enc_key}) id_key({0.id_key}) csrk({0.sign_key}) pk({0.pk})".format(
             self
         )
 
@@ -655,8 +655,8 @@ class BLEGapEncKey(object):
 
     def to_c(self):
         enc_key = driver.ble_gap_enc_key_t()
-        enk_key.master_id = BLEGapMasterId(self.master_id).to_c()
-        enk_key.enc_info = BLEGapEncInfo(self.enc_info).to_c()
+        enc_key.master_id = self.master_id.to_c()
+        enc_key.enc_info = self.enc_info.to_c()
         return enc_key
 
     def __str__(self):
@@ -2580,7 +2580,7 @@ class BLEDriver(object):
     @NordicSemiErrorCheck
     @wrapt.synchronized(api_lock)
     def ble_gap_device_name_set(self, name, device_name_read_only=True):
-        write_perm = BLEGapConnSecMode()
+        write_perm=BLEGapConnSecMode()
         if device_name_read_only:
             write_perm.set_no_access()
         else:
@@ -2606,6 +2606,7 @@ class BLEDriver(object):
         assert isinstance(conn_params, BLEGapConnParams), "Invalid argument type"
         params = conn_params.to_c()
         return driver.sd_ble_gap_ppcp_set(self.rpc_adapter, params)
+
 
     def ble_gatts_sys_attr_set(self, conn_handle, sys_attr_data, length, flags):
         return driver.sd_ble_gatts_sys_attr_set(self.rpc_adapter, conn_handle,
