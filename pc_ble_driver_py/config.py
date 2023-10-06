@@ -41,7 +41,7 @@
 #
 # * "NRF51"
 # * "NRF52"
-__conn_ic_id__ = None
+__conn_ic_id__ = "NRF52"
 
 import os
 
