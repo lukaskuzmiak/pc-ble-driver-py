@@ -1,8 +1,8 @@
-setuptools >= 68.1.2
-wheel == 0.36.2
-scikit-build ~= 0.17.6
-cmake >= 3.27.2
-ninja ~= 1.11.1
-tox ~= 4.10.0
-unittest-xml-reporting == 3.2.0
-xmlrunner ~= 1.7.7
+setuptools ~= 82.0.1
+wheel ~= 0.47.0
+scikit-build ~= 0.19.0
+cmake ~= 4.3.2
+ninja ~= 1.13.0
+tox ~= 4.53.1
+# unittest-xml-reporting==3.0.4 # horribly deprecated
+# xmlrunner~=1.7.7 # horribly deprecated
